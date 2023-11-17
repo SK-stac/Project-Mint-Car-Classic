@@ -1,0 +1,85 @@
+Created a Series of Tables based on the Data Set as well as a Rolling Average.
+
+CREATE table Office_Employees AS
+  SELECT e.employeeNumber AS Employee_ID,
+      e.firstName AS First_Name,
+      e.lastName AS Last_Name,
+      e.jobTitle AS Job_Title,
+      o.addressLine1 AS Address,
+      o.city AS City
+    FROM employees AS e
+    JOIN offices AS o
+      ON e.officeCode = o.officeCode;
+
+SELECT * FROM Office_Employees
+ORDER BY last_name;
+
+
+CREATE TABLE Order_Summary AS
+SELECT a.orderNumber AS Order_Number,
+	  p.customerNumber,
+      a.productCode,
+      pl.productLine,
+      pr.productName,
+      pr.productDescription,
+      a.quantityOrdered AS Quantity_Purchased,
+      a.priceEach AS PricePer,
+      b.shippedDate,
+      b.status,
+      p.checkNumber,
+      pr.quantityInStock,
+      (a.quantityOrdered*a.priceEach) AS Total_Amount
+    FROM orderdetails AS a
+    JOIN orders AS b ON a.orderNumber = b.orderNumber
+    JOIN payments AS p ON p.customerNumber=b.customerNumber
+    JOIN products as pr on pr.productCode=a.productCode
+    JOIN productlines as pl on pl.productLine=pr.productLine;
+    
+drop table order_summary;
+
+CREATE TABLE Inventory_Summary AS
+SELECT pl.productLine AS Product_Line,
+	  pr.productCode,
+      pr.productName AS Product_Code,
+      pr.productScale,
+      pr.productVendor,
+      pr.productDescription,
+      pr.warehouseCode,
+      w.warehouseName,
+      pr.quantityInStock,
+      pr.buyPrice,
+      pr.MSRP,
+      (pr.buyPrice*pr.quantityInStock) as Total_Inventory_Purchase,
+      (pr.MSRP*pr.quantityInStock) as Inventory_Value
+    FROM productlines AS pl
+    JOIN products AS pr ON pl.productLine = pr.productLine
+    JOIN warehouses AS w ON w.warehouseCode=pr.warehouseCode;
+    
+SELECT * FROM inventory_summary as i
+JOIN order_summary as o ON o.productCode=i.productCode;
+    
+Drop table Inventory_Summary;
+
+Rolling Average for customer Purchases
+
+SELECT customernumber, order_number, total_amount, priceper, 
+FORMAT(avg(total_amount) over(ORDER by customernumber rows between 3 PRECEDING and CURRENT row), 2) AS "Average Total",
+FORMAT(avg(priceper) over(order by customernumber rows between 3 preceding and current row),2) as "Average Price",
+FORMAT(avg(quantity_purchased) over(order by customernumber rows between 3 preceding and current row),2) as "Average Quantity Purchased"
+FROM order_summary
+Order by order_number;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
